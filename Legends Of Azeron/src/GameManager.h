@@ -24,6 +24,7 @@ private:
     void displayMenu();
     void createPlayer();
     void gameLoop();
+    void visitPotionShop();
 };
 
 #endif

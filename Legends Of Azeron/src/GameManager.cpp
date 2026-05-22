@@ -5,6 +5,8 @@
 #include "Goblin.h"
 #include "Orc.h"
 #include "Dragon.h"
+#include "Potion.h"
+#include "Inventory.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -143,14 +145,18 @@ void GameManager::gameLoop()
         cout << "\n=== GAME MENU ===" << endl;
         cout << "1. Fight Enemy" << endl;
         cout << "2. View Stats" << endl;
-        cout << "3. Save Game" << endl;
-        cout << "4. Exit Game" << endl;
-        cout << "Enter choice (1-4): ";
+        cout << "3. View Inventory" << endl;
+        cout << "4. View Potions" << endl;
+        cout << "5. Use Potion" << endl;
+        cout << "6. Potion Shop" << endl;
+        cout << "7. Save Game" << endl;
+        cout << "8. Exit Game" << endl;
+        cout << "Enter choice (1-8): ";
         cin >> choice;
         
         try
         {
-            if (choice < 1 || choice > 4)
+            if (choice < 1 || choice > 8)
                 throw runtime_error("Invalid choice!");
             
             switch (choice)
@@ -183,6 +189,18 @@ void GameManager::gameLoop()
                     this->currentPlayer->displayStats();
                     break;
                 case 3:
+                    this->currentPlayer->displayInventory();
+                    break;
+                case 4:
+                    this->currentPlayer->displayPotions();
+                    break;
+                case 5:
+                    this->currentPlayer->useHealthPotion();
+                    break;
+                case 6:
+                    visitPotionShop();
+                    break;
+                case 7:
                     try
                     {
                         saveManager.saveGame(this->currentPlayer);
@@ -192,7 +210,7 @@ void GameManager::gameLoop()
                         cout << "Error: " << e.what() << endl;
                     }
                     break;
-                case 4:
+                case 8:
                     cout << "\nExiting game..." << endl;
                     return;
                 default:
@@ -209,4 +227,71 @@ void GameManager::gameLoop()
     cout << "Your character has been defeated!" << endl;
     cout << "Final Level: " << this->currentPlayer->getLevel() << endl;
     cout << "Total Battles in Game: " << BattleSystem::getTotalBattles() << endl;
+}
+
+void GameManager::visitPotionShop()
+{
+    if (this->currentPlayer == nullptr) return;
+    
+    cout << "\n================================" << endl;
+    cout << "   POTION SHOP" << endl;
+    cout << "================================" << endl;
+    cout << "Your Gold: " << this->currentPlayer->getGold() << endl;
+    cout << "\nAvailable Potions:" << endl;
+    cout << "1. Health Potion - 50 gold (restores 50 HP)" << endl;
+    cout << "2. Greater Health Potion - 100 gold (restores 100 HP)" << endl;
+    cout << "3. Exit Shop" << endl;
+    cout << "Enter choice (1-3): ";
+    
+    int choice;
+    cin >> choice;
+    
+    try
+    {
+        if (choice < 1 || choice > 3)
+            throw runtime_error("Invalid choice!");
+        
+        switch (choice)
+        {
+            case 1:
+            {
+                if (this->currentPlayer->getGold() >= 50)
+                {
+                    Potion* potion = new Potion("Health", 50);
+                    this->currentPlayer->getInventory()->addPotion(potion);
+                    this->currentPlayer->spendGold(50);
+                    cout << "Purchased Health Potion!" << endl;
+                }
+                else
+                {
+                    cout << "Not enough gold! (Need 50, Have " << this->currentPlayer->getGold() << ")" << endl;
+                }
+                break;
+            }
+            case 2:
+            {
+                if (this->currentPlayer->getGold() >= 100)
+                {
+                    Potion* potion = new Potion("Greater Health", 100);
+                    this->currentPlayer->getInventory()->addPotion(potion);
+                    this->currentPlayer->spendGold(100);
+                    cout << "Purchased Greater Health Potion!" << endl;
+                }
+                else
+                {
+                    cout << "Not enough gold! (Need 100, Have " << this->currentPlayer->getGold() << ")" << endl;
+                }
+                break;
+            }
+            case 3:
+                cout << "Thank you for visiting the Potion Shop!" << endl;
+                break;
+            default:
+                throw runtime_error("Invalid choice!");
+        }
+    }
+    catch (const exception& e)
+    {
+        cout << "Error: " << e.what() << endl;
+    }
 }
