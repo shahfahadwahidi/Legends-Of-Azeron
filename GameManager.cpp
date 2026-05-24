@@ -52,7 +52,7 @@ void GameManager::run()
             }
             else if (choice == 2)
             {
-                try
+                try 
                 {
                     this->currentPlayer = saveManager.loadGame();
                     if (this->currentPlayer != nullptr)
