@@ -22,34 +22,34 @@ Shop::~Shop()
 void Shop::initializeWeapons()
 {
     // COMMON weapons
-    availableWeapons.push_back(new Weapon("Sword", 15, "Common", WeaponType::SWORD, 5, 0, 50));
-    availableWeapons.push_back(new Weapon("Dagger", 8, "Common", WeaponType::DAGGER, 25, 0, 30));
-    availableWeapons.push_back(new Weapon("Bow", 12, "Common", WeaponType::BOW, 10, 0, 45));
+    availableWeapons.push_back(new Weapon("Sword", 15, "Common", "SWORD", 5, 0, 50));
+    availableWeapons.push_back(new Weapon("Dagger", 8, "Common", "DAGGER", 25, 0, 30));
+    availableWeapons.push_back(new Weapon("Bow", 12, "Common", "BOW", 10, 0, 45));
 
     // RARE weapons
-    availableWeapons.push_back(new Weapon("Battle Axe", 20, "Rare", WeaponType::AXE, 0, 5, 75));
-    availableWeapons.push_back(new Weapon("Poison Dagger", 10, "Rare", WeaponType::POISON_DAGGER, 20, 8, 60));
-    availableWeapons.push_back(new Weapon("Fire Sword", 18, "Rare", WeaponType::FIRE_SWORD, 5, 10, 70));
-    availableWeapons.push_back(new Weapon("Magic Staff", 16, "Rare", WeaponType::STAFF, 0, 0, 65));
+    availableWeapons.push_back(new Weapon("Battle Axe", 20, "Rare", "AXE", 0, 5, 75));
+    availableWeapons.push_back(new Weapon("Poison Dagger", 10, "Rare", "POISON_DAGGER", 20, 8, 60));
+    availableWeapons.push_back(new Weapon("Fire Sword", 18, "Rare", "FIRE_SWORD", 5, 10, 70));
+    availableWeapons.push_back(new Weapon("Magic Staff", 16, "Rare", "STAFF", 0, 0, 65));
 
     // LEGENDARY weapons
-    availableWeapons.push_back(new Weapon("Legendary Blade", 30, "Legendary", WeaponType::LEGENDARY_BLADE, 15, 15, 150));
+    availableWeapons.push_back(new Weapon("Legendary Blade", 30, "Legendary", "LEGENDARY_BLADE", 15, 15, 150));
 }
 
 void Shop::initializePotions()
 {
     // Health potions
-    availablePotions.push_back(new Potion(PotionType::HEALTH, "Health Potion", 30, 0, 20));
-    availablePotions.push_back(new Potion(PotionType::MEGA_HEALTH, "Mega Health Potion", 80, 0, 50));
+    availablePotions.push_back(new Potion("HEALTH", "Health Potion", 30, 0, 20));
+    availablePotions.push_back(new Potion("MEGA_HEALTH", "Mega Health Potion", 80, 0, 50));
 
     // Buff potions
-    availablePotions.push_back(new Potion(PotionType::MANA, "Mana Potion", 50, 0, 35));
-    availablePotions.push_back(new Potion(PotionType::STRENGTH, "Strength Potion", 10, 1, 40));
-    availablePotions.push_back(new Potion(PotionType::DEFENSE, "Defense Potion", 10, 1, 40));
-    availablePotions.push_back(new Potion(PotionType::CRITICAL, "Critical Potion", 25, 1, 45));
+    availablePotions.push_back(new Potion("MANA", "Mana Potion", 50, 0, 35));
+    availablePotions.push_back(new Potion("STRENGTH", "Strength Potion", 10, 1, 40));
+    availablePotions.push_back(new Potion("DEFENSE", "Defense Potion", 10, 1, 40));
+    availablePotions.push_back(new Potion("CRITICAL", "Critical Potion", 25, 1, 45));
 
     // Revive potion
-    availablePotions.push_back(new Potion(PotionType::REVIVE, "Revive Potion", 1, 0, 100));
+    availablePotions.push_back(new Potion("REVIVE", "Revive Potion", 1, 0, 100));
 }
 
 void Shop::displayShop() const

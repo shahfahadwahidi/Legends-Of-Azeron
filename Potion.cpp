@@ -1,11 +1,11 @@
 #include "Potion.h"
 
-Potion::Potion(PotionType type, string name, int amount, int dur, int goldPrice)
+Potion::Potion(string type, string name, int amount, int dur, int goldPrice)
     : potionType(type), potionName(name), restoreAmount(amount), duration(dur), price(goldPrice)
 {
 }
 
-PotionType Potion::getPotionType() const { return potionType; }
+string Potion::getPotionType() const { return potionType; }
 string Potion::getPotionName() const { return potionName; }
 int Potion::getRestoreAmount() const { return restoreAmount; }
 int Potion::getDuration() const { return duration; }

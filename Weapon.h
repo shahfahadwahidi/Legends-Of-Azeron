@@ -6,40 +6,27 @@
 
 using namespace std;
 
-// Weapon Types
-enum class WeaponType
-{
-    SWORD,              // Balanced damage
-    AXE,                // High damage, slow
-    DAGGER,             // Low damage, high crit chance
-    STAFF,              // Boosts Mage attacks
-    BOW,                // Consistent ranged damage
-    POISON_DAGGER,      // Extra damage over time
-    FIRE_SWORD,         // Bonus fire damage
-    LEGENDARY_BLADE     // High damage + special effect
-};
-
 class Weapon
 {
 private:
     string weaponName;
     int damage;
     string rarity;  // Common, Uncommon, Rare, Legendary
-    WeaponType weaponType;
+    string weaponType;  // SWORD, AXE, DAGGER, STAFF, BOW, etc.
     int critChance;  // 0-100%
     int specialDamage;  // Poison/Fire damage
     int price;  // Gold cost in shop
     int upgradeLevel;  // Number of times upgraded
 
 public:
-    Weapon(string name, int dmg, string rar, WeaponType type);
-    Weapon(string name, int dmg, string rar, WeaponType type, int crit, int special, int goldPrice);
+    Weapon(string name, int dmg, string rar, string type);
+    Weapon(string name, int dmg, string rar, string type, int crit, int special, int goldPrice);
     
     // Getters
     string getWeaponName() const;
     int getDamage() const;
     string getRarity() const;
-    WeaponType getWeaponType() const;
+    string getWeaponType() const;
     int getCritChance() const;
     int getSpecialDamage() const;
     int getPrice() const;
