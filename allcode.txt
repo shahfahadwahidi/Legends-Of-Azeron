@@ -1,0 +1,1416 @@
+================================================================================
+                    LEGENDS OF AZERON - ALL CODE
+================================================================================
+
+================================================================================
+FILE: Assassin.h
+================================================================================
+#ifndef ASSASSIN_H
+#define ASSASSIN_H
+
+#include "Player.h"
+
+class Assassin : public Player
+{
+public:
+    Assassin(string name);
+    ~Assassin() = default;
+
+    // Override attack with assassin-specific behavior
+    void attack(Character& enemy) override;
+    void useSpecialAbility(Character& enemy) override;
+};
+
+#endif
+
+================================================================================
+FILE: Assassin.cpp
+================================================================================
+#include "Assassin.h"
+#include <cstdlib>
+#include <ctime>
+
+Assassin::Assassin(string name)
+    : Player(name, 80, 1, 18, 5)
+{
+    cout << "Assassin " << name << " has entered the arena!" << endl;
+}
+
+void Assassin::attack(Character& enemy)
+{
+    int damage = this->attackPower;
+    
+    // 40% chance for critical hit (double damage)
+    if (rand() % 100 < 40)
+    {
+        damage *= 2;
+        cout << this->name << " performs a CRITICAL STRIKE!" << endl;
+    }
+    else
+    {
+        cout << this->name << " strikes swiftly!" << endl;
+    }
+    
+    enemy.takeDamage(damage);
+}
+
+void Assassin::useSpecialAbility(Character& enemy)
+{
+    int damage = this->attackPower * 2;
+    cout << this->name << " executes SHADOW CLONE ATTACK!" << endl;
+    cout << "Strikes from multiple angles!" << endl;
+    enemy.takeDamage(damage);
+}
+
+================================================================================
+FILE: BattleSystem.h
+================================================================================
+#ifndef BATTLESYSTEM_H
+#define BATTLESYSTEM_H
+
+#include "Character.h"
+
+class BattleSystem
+{
+private:
+    static int totalBattles;  // Static member
+
+public:
+    BattleSystem();
+    
+    // Main battle functions
+    void startBattle(Character& player, Character& enemy);
+    void playerTurn(Character& player, Character& enemy);
+    void enemyTurn(Character& player, Character& enemy);
+    void handlePlayerChoice(Character& player, Character& enemy);
+    void checkWinner(Character& player, Character& enemy);
+    
+    // Static function
+    static int getTotalBattles();
+};
+
+#endif
+
+================================================================================
+FILE: BattleSystem.cpp
+================================================================================
+#include "BattleSystem.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
+
+// Initialize static member
+int BattleSystem::totalBattles = 0;
+
+BattleSystem::BattleSystem()
+{
+}
+
+void BattleSystem::startBattle(Character& player, Character& enemy)
+{
+    cout << "\n================================" << endl;
+    cout << "   BATTLE START" << endl;
+    cout << "================================" << endl;
+    cout << player.getName() << " vs " << enemy.getName() << endl;
+    cout << "================================\n" << endl;
+    
+    totalBattles++;
+    
+    // Battle loop
+    while (player.isAlive() && enemy.isAlive())
+    {
+        // Reset defense boosts at start of round
+        player.resetDefenseBoost();
+        enemy.resetDefenseBoost();
+        
+        playerTurn(player, enemy);
+        if (!enemy.isAlive()) break;
+        
+        enemyTurn(player, enemy);
+        if (!player.isAlive()) break;
+    }
+    
+    checkWinner(player, enemy);
+}
+
+void BattleSystem::playerTurn(Character& player, Character& enemy)
+{
+    cout << "\n" << player.getName() << "'s Turn!" << endl;
+    cout << player.getName() << " HP: " << player.getHealth() << endl;
+    cout << enemy.getName() << " HP: " << enemy.getHealth() << endl;
+    
+    handlePlayerChoice(player, enemy);
+}
+
+void BattleSystem::handlePlayerChoice(Character& player, Character& enemy)
+{
+    int choice;
+    
+    cout << "\nChoose your action:" << endl;
+    cout << "1. Attack" << endl;
+    cout << "2. Defend" << endl;
+    cout << "3. Special Ability" << endl;
+    cout << "Enter choice (1-3): ";
+    cin >> choice;
+    
+    try
+    {
+        if (choice < 1 || choice > 3)
+            throw runtime_error("Invalid choice! Please try again.");
+        
+        switch (choice)
+        {
+            case 1:
+                player.attack(enemy);
+                break;
+            case 2:
+                player.defend();
+                break;
+            case 3:
+                player.useSpecialAbility(enemy);
+                break;
+        }
+    }
+    catch (const exception& e)
+    {
+        cout << "Error: " << e.what() << endl;
+        handlePlayerChoice(player, enemy);  // Ask again
+    }
+}
+
+void BattleSystem::enemyTurn(Character& player, Character& enemy)
+{
+    cout << "\n" << enemy.getName() << "'s Turn!" << endl;
+    
+    // Enemy AI: 30% chance to use special ability
+    int action = rand() % 100;
+    if (action < 30)
+    {
+        enemy.useSpecialAbility(player);
+    }
+    else
+    {
+        enemy.attack(player);
+    }
+}
+
+void BattleSystem::checkWinner(Character& player, Character& enemy)
+{
+    cout << "\n================================" << endl;
+    if (player.isAlive())
+    {
+        cout << "VICTORY! " << player.getName() << " wins!" << endl;
+    }
+    else
+    {
+        cout << "DEFEAT! " << player.getName() << " has fallen!" << endl;
+    }
+    cout << "================================" << endl;
+}
+
+int BattleSystem::getTotalBattles()
+{
+    return totalBattles;
+}
+
+================================================================================
+FILE: Character.h
+================================================================================
+#ifndef CHARACTER_H
+#define CHARACTER_H
+
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+// ABSTRACT BASE CLASS
+class Character
+{
+protected:
+    string name;
+    int health;
+    int maxHealth;
+    int level;
+    int attackPower;
+    int defense;
+    int defenseBoost;  // Temporary defense increase from defend action
+
+public:
+    Character(string name, int health, int level, int attackPower, int defense);
+    virtual ~Character() = default;
+
+    // Pure virtual functions - must be overridden in derived classes
+    virtual void attack(Character& enemy) = 0;
+    virtual void useSpecialAbility(Character& enemy) = 0;
+
+    // Common functions
+    void takeDamage(int damage);
+    void defend();
+    void resetDefenseBoost();
+    void displayStats() const;
+    bool isAlive() const;
+
+    // Getters
+    string getName() const;
+    int getHealth() const;
+    int getLevel() const;
+    int getAttackPower() const;
+    int getDefense() const;
+    int getTotalDefense() const;
+    
+    // Setters (for save/load)
+    void setHealth(int h);
+};
+
+#endif
+
+================================================================================
+FILE: Character.cpp
+================================================================================
+#include "Character.h"
+
+Character::Character(string name, int health, int level, int attackPower, int defense)
+    : name(name), health(health), maxHealth(health), level(level), 
+      attackPower(attackPower), defense(defense), defenseBoost(0)
+{
+}
+
+void Character::takeDamage(int damage)
+{
+    int totalDefense = this->defense + this->defenseBoost;
+    int actualDamage = max(0, damage - totalDefense);
+    this->health -= actualDamage;
+    if (this->health < 0) this->health = 0;
+    cout << this->name << " takes " << actualDamage << " damage!" << endl;
+}
+
+void Character::defend()
+{
+    this->defenseBoost = 5;  // Temporary +5 defense
+    cout << this->name << " takes a defensive stance! Defense +5 for this turn!" << endl;
+}
+
+void Character::resetDefenseBoost()
+{
+    this->defenseBoost = 0;
+}
+
+void Character::displayStats() const
+{
+    cout << "\n=== " << this->name << " ===" << endl;
+    cout << "Level: " << this->level << endl;
+    cout << "HP: " << this->health << "/" << this->maxHealth << endl;
+    cout << "Attack: " << this->attackPower << endl;
+    cout << "Defense: " << this->defense << endl;
+}
+
+bool Character::isAlive() const
+{
+    return this->health > 0;
+}
+
+string Character::getName() const { return this->name; }
+int Character::getHealth() const { return this->health; }
+int Character::getLevel() const { return this->level; }
+int Character::getAttackPower() const { return this->attackPower; }
+int Character::getDefense() const { return this->defense; }
+int Character::getTotalDefense() const { return this->defense + this->defenseBoost; }
+
+void Character::setHealth(int h)
+{
+    this->health = (h < 0) ? 0 : h;
+}
+
+================================================================================
+FILE: Dragon.h
+================================================================================
+#ifndef DRAGON_H
+#define DRAGON_H
+
+#include "Enemy.h"
+
+class Dragon : public Enemy
+{
+public:
+    Dragon();
+    ~Dragon() = default;
+
+    // Override attack with dragon-specific behavior
+    void attack(Character& player) override;
+    void useSpecialAbility(Character& player) override;
+};
+
+#endif
+
+================================================================================
+FILE: Dragon.cpp
+================================================================================
+#include "Dragon.h"
+
+Dragon::Dragon()
+    : Enemy("Dragon", 150, 5, 25, 8, 200, 100)
+{
+}
+
+void Dragon::attack(Character& player)
+{
+    cout << this->name << " takes a deep breath..." << endl;
+    
+    // Dragon becomes stronger when below 50% HP
+    if (this->health < this->maxHealth / 2)
+    {
+        cout << this->name << " is ENRAGED! Attacks with fury!" << endl;
+        player.takeDamage(this->attackPower * 2);
+    }
+    else
+    {
+        cout << this->name << " breathes flames!" << endl;
+        player.takeDamage(this->attackPower);
+    }
+}
+
+void Dragon::useSpecialAbility(Character& player)
+{
+    cout << this->name << " unleashes INFERNO BREATH!" << endl;
+    cout << "Engulfs the area in scorching flames!" << endl;
+    player.takeDamage(this->attackPower * 3);
+}
+
+================================================================================
+FILE: Enemy.h
+================================================================================
+#ifndef ENEMY_H
+#define ENEMY_H
+
+#include "Character.h"
+
+class Enemy : public Character
+{
+protected:
+    int xpReward;
+    int lootAmount;
+
+public:
+    Enemy(string name, int health, int level, int attackPower, 
+          int defense, int xpReward, int loot);
+    virtual ~Enemy() = default;
+
+    // Pure virtual - must be overridden
+    virtual void attack(Character& player) = 0;
+    virtual void useSpecialAbility(Character& player) = 0;
+
+    // Getters
+    int getXPReward() const;
+    int getLootAmount() const;
+};
+
+#endif
+
+================================================================================
+FILE: Enemy.cpp
+================================================================================
+#include "Enemy.h"
+
+Enemy::Enemy(string name, int health, int level, int attackPower, 
+             int defense, int xpReward, int loot)
+    : Character(name, health, level, attackPower, defense),
+      xpReward(xpReward), lootAmount(loot)
+{
+}
+
+int Enemy::getXPReward() const { return this->xpReward; }
+int Enemy::getLootAmount() const { return this->lootAmount; }
+
+================================================================================
+FILE: GameManager.h
+================================================================================
+#ifndef GAMEMANAGER_H
+#define GAMEMANAGER_H
+
+#include "Player.h"
+#include "BattleSystem.h"
+#include "SaveManager.h"
+
+using namespace std;
+
+class GameManager
+{
+private:
+    Player* currentPlayer;
+    BattleSystem battleSystem;
+    SaveManager saveManager;
+
+public:
+    GameManager();
+    ~GameManager();
+
+    void run();
+
+private:
+    void displayMenu();
+    void createPlayer();
+    void gameLoop();
+};
+
+#endif
+
+================================================================================
+FILE: GameManager.cpp
+================================================================================
+#include "GameManager.h"
+#include "Warrior.h"
+#include "Mage.h"
+#include "Assassin.h"
+#include "Goblin.h"
+#include "Orc.h"
+#include "Dragon.h"
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+GameManager::GameManager()
+    : currentPlayer(nullptr), saveManager("savegame.txt")
+{
+    srand(time(0));
+}
+
+GameManager::~GameManager()
+{
+    if (this->currentPlayer != nullptr)
+        delete this->currentPlayer;
+}
+
+void GameManager::run()
+{
+    int choice = 0;
+    
+    while (choice != 3)
+    {
+        displayMenu();
+        cin >> choice;
+        
+        try
+        {
+            if (choice < 1 || choice > 3)
+                throw runtime_error("Invalid choice! Please try again.");
+            
+            if (choice == 1)
+            {
+                createPlayer();
+                if (this->currentPlayer != nullptr)
+                {
+                    gameLoop();
+                    delete this->currentPlayer;
+                    this->currentPlayer = nullptr;
+                }
+            }
+            else if (choice == 2)
+            {
+                try
+                {
+                    this->currentPlayer = saveManager.loadGame();
+                    if (this->currentPlayer != nullptr)
+                    {
+                        gameLoop();
+                        delete this->currentPlayer;
+                        this->currentPlayer = nullptr;
+                    }
+                }
+                catch (const exception& e)
+                {
+                    cout << "\nError: " << e.what() << endl;
+                }
+            }
+            else if (choice == 3)
+            {
+                cout << "\nThank you for playing Legends of Azeron!" << endl;
+            }
+        }
+        catch (const exception& e)
+        {
+            cout << "\nError: " << e.what() << endl;
+        }
+    }
+}
+
+void GameManager::displayMenu()
+{
+    cout << "\n=====================================" << endl;
+    cout << "  LEGENDS OF AZERON - Main Menu" << endl;
+    cout << "=====================================" << endl;
+    cout << "1. Start New Game" << endl;
+    
+    if (saveManager.fileExists())
+        cout << "2. Load Game" << endl;
+    else
+        cout << "2. Load Game (No save available)" << endl;
+    
+    cout << "3. Exit" << endl;
+    cout << "=====================================" << endl;
+    cout << "Enter choice: ";
+}
+
+void GameManager::createPlayer()
+{
+    string playerName;
+    int classChoice;
+    
+    cout << "\nEnter your character name: ";
+    cin >> playerName;
+    
+    cout << "\nChoose your class:" << endl;
+    cout << "1. Warrior (High HP, Strong attacks, 30% chance to double damage)" << endl;
+    cout << "2. Mage (Low HP, Powerful magic attacks)" << endl;
+    cout << "3. Assassin (40% critical hit chance)" << endl;
+    cout << "Enter choice (1-3): ";
+    cin >> classChoice;
+    
+    try
+    {
+        if (classChoice < 1 || classChoice > 3)
+            throw runtime_error("Invalid class choice!");
+        
+        switch (classChoice)
+        {
+            case 1:
+                this->currentPlayer = new Warrior(playerName);
+                break;
+            case 2:
+                this->currentPlayer = new Mage(playerName);
+                break;
+            case 3:
+                this->currentPlayer = new Assassin(playerName);
+                break;
+        }
+    }
+    catch (const exception& e)
+    {
+        cout << "Error: " << e.what() << endl;
+    }
+}
+
+void GameManager::gameLoop()
+{
+    if (this->currentPlayer == nullptr) return;
+    
+    int choice;
+    
+    while (this->currentPlayer->isAlive())
+    {
+        cout << "\n=== GAME MENU ===" << endl;
+        cout << "1. Fight Enemy" << endl;
+        cout << "2. View Stats" << endl;
+        cout << "3. Save Game" << endl;
+        cout << "4. Exit Game" << endl;
+        cout << "Enter choice (1-4): ";
+        cin >> choice;
+        
+        try
+        {
+            if (choice < 1 || choice > 4)
+                throw runtime_error("Invalid choice!");
+            
+            switch (choice)
+            {
+                case 1:
+                {
+                    // Random enemy type
+                    Enemy* enemy;
+                    int enemyType = rand() % 3;
+                    
+                    if (enemyType == 0)
+                        enemy = new Goblin();
+                    else if (enemyType == 1)
+                        enemy = new Orc();
+                    else
+                        enemy = new Dragon();
+                    
+                    battleSystem.startBattle(*this->currentPlayer, *enemy);
+                    
+                    if (this->currentPlayer->isAlive())
+                    {
+                        this->currentPlayer->gainXP(enemy->getXPReward());
+                        this->currentPlayer->addGold(enemy->getLootAmount());
+                    }
+                    
+                    delete enemy;
+                    break;
+                }
+                case 2:
+                    this->currentPlayer->displayStats();
+                    break;
+                case 3:
+                    try
+                    {
+                        saveManager.saveGame(this->currentPlayer);
+                    }
+                    catch (const exception& e)
+                    {
+                        cout << "Error: " << e.what() << endl;
+                    }
+                    break;
+                case 4:
+                    cout << "\nExiting game..." << endl;
+                    return;
+                default:
+                    throw runtime_error("Invalid choice!");
+            }
+        }
+        catch (const exception& e)
+        {
+            cout << "\nError: " << e.what() << endl;
+        }
+    }
+    
+    cout << "\n*** GAME OVER! ***" << endl;
+    cout << "Your character has been defeated!" << endl;
+    cout << "Final Level: " << this->currentPlayer->getLevel() << endl;
+    cout << "Total Battles in Game: " << BattleSystem::getTotalBattles() << endl;
+}
+
+================================================================================
+FILE: Goblin.h
+================================================================================
+#ifndef GOBLIN_H
+#define GOBLIN_H
+
+#include "Enemy.h"
+
+class Goblin : public Enemy
+{
+public:
+    Goblin();
+    ~Goblin() = default;
+
+    // Override attack with goblin-specific behavior
+    void attack(Character& player) override;
+    void useSpecialAbility(Character& player) override;
+};
+
+#endif
+
+================================================================================
+FILE: Goblin.cpp
+================================================================================
+#include "Goblin.h"
+
+Goblin::Goblin()
+    : Enemy("Goblin", 25, 1, 5, 1, 20, 10)
+{
+}
+
+void Goblin::attack(Character& player)
+{
+    cout << this->name << " strikes with a rusty blade!" << endl;
+    player.takeDamage(this->attackPower);
+}
+
+void Goblin::useSpecialAbility(Character& player)
+{
+    cout << this->name << " performs AMBUSH!" << endl;
+    cout << "Tries to catch you off guard!" << endl;
+    player.takeDamage(this->attackPower * 2);
+}
+
+================================================================================
+FILE: Inventory.h
+================================================================================
+#ifndef INVENTORY_H
+#define INVENTORY_H
+
+#include <vector>
+#include <iostream>
+
+using namespace std;
+
+// Forward declaration
+class Weapon;
+
+class Inventory
+{
+private:
+    vector<Weapon*> weapons;
+    int maxCapacity;
+
+public:
+    Inventory(int capacity = 10);
+    ~Inventory();
+
+    // Functions
+    void addWeapon(Weapon* weapon);
+    void removeWeapon(int index);
+    void displayInventory() const;
+    
+    // Getters
+    int getItemCount() const;
+    Weapon* getWeapon(int index) const;
+    
+    // Operator overloading
+    Inventory& operator+(Weapon* weapon);  // Add weapon using + operator
+};
+
+#endif
+
+================================================================================
+FILE: Inventory.cpp
+================================================================================
+#include "Inventory.h"
+#include "Weapon.h"
+
+Inventory::Inventory(int capacity) 
+    : maxCapacity(capacity)
+{
+}
+
+Inventory::~Inventory()
+{
+    for (auto weapon : weapons)
+    {
+        delete weapon;
+    }
+    weapons.clear();
+}
+
+void Inventory::addWeapon(Weapon* weapon)
+{
+    if (weapons.size() < maxCapacity)
+    {
+        weapons.push_back(weapon);
+        cout << "Added " << weapon->getWeaponName() << " to inventory!" << endl;
+    }
+    else
+    {
+        cout << "Inventory is full!" << endl;
+    }
+}
+
+void Inventory::removeWeapon(int index)
+{
+    if (index >= 0 && index < weapons.size())
+    {
+        cout << "Removed " << weapons[index]->getWeaponName() << " from inventory!" << endl;
+        weapons.erase(weapons.begin() + index);
+    }
+}
+
+void Inventory::displayInventory() const
+{
+    cout << "\n=== INVENTORY (" << weapons.size() << "/" << maxCapacity << ") ===" << endl;
+    for (size_t i = 0; i < weapons.size(); i++)
+    {
+        cout << i + 1 << ". ";
+        weapons[i]->displayWeapon();
+    }
+}
+
+int Inventory::getItemCount() const { return weapons.size(); }
+
+Weapon* Inventory::getWeapon(int index) const
+{
+    if (index >= 0 && index < weapons.size())
+        return weapons[index];
+    return nullptr;
+}
+
+Inventory& Inventory::operator+(Weapon* weapon)
+{
+    addWeapon(weapon);
+    return *this;
+}
+
+================================================================================
+FILE: Mage.h
+================================================================================
+#ifndef MAGE_H
+#define MAGE_H
+
+#include "Player.h"
+
+class Mage : public Player
+{
+public:
+    Mage(string name);
+    ~Mage() = default;
+
+    // Override attack with mage-specific behavior
+    void attack(Character& enemy) override;
+    void useSpecialAbility(Character& enemy) override;
+};
+
+#endif
+
+================================================================================
+FILE: Mage.cpp
+================================================================================
+#include "Mage.h"
+
+Mage::Mage(string name)
+    : Player(name, 70, 1, 8, 3)
+{
+    cout << "Mage " << name << " has entered the arena!" << endl;
+}
+
+void Mage::attack(Character& enemy)
+{
+    // Mage does lower physical damage but more consistent
+    int magicDamage = this->attackPower * 2;
+    cout << this->name << " casts a MAGIC MISSILE!" << endl;
+    enemy.takeDamage(magicDamage);
+}
+
+void Mage::useSpecialAbility(Character& enemy)
+{
+    int magicDamage = this->attackPower * 3;
+    cout << this->name << " unleashes FIREBALL!" << endl;
+    cout << "Engulfs " << enemy.getName() << " in flames!" << endl;
+    enemy.takeDamage(magicDamage);
+}
+
+================================================================================
+FILE: main.cpp
+================================================================================
+#include <iostream>
+#include "GameManager.h"
+
+using namespace std;
+
+int main()
+{
+    cout << "========================================" << endl;
+    cout << "   LEGENDS OF AZERON - RPG Battle Game" << endl;
+    cout << "========================================" << endl;
+    cout << "Welcome to your adventure!\n" << endl;
+    
+    try
+    {
+        GameManager game;
+        game.run();
+    }
+    catch (const exception& e)
+    {
+        cout << "Fatal Error: " << e.what() << endl;
+        return 1;
+    }
+    
+    return 0;
+}
+
+================================================================================
+FILE: Orc.h
+================================================================================
+#ifndef ORC_H
+#define ORC_H
+
+#include "Enemy.h"
+
+class Orc : public Enemy
+{
+public:
+    Orc();
+    ~Orc() = default;
+
+    // Override attack with orc-specific behavior
+    void attack(Character& player) override;
+    void useSpecialAbility(Character& player) override;
+};
+
+#endif
+
+================================================================================
+FILE: Orc.cpp
+================================================================================
+#include "Orc.h"
+
+Orc::Orc()
+    : Enemy("Orc", 50, 2, 10, 3, 50, 25)
+{
+}
+
+void Orc::attack(Character& player)
+{
+    cout << this->name << " slams its massive club!" << endl;
+    player.takeDamage(this->attackPower + 3);
+}
+
+void Orc::useSpecialAbility(Character& player)
+{
+    cout << this->name << " performs OVERHEAD SMASH!" << endl;
+    cout << "Brings the massive club down with full force!" << endl;
+    player.takeDamage(this->attackPower * 2);
+}
+
+================================================================================
+FILE: Player.h
+================================================================================
+#ifndef PLAYER_H
+#define PLAYER_H
+
+#include "Character.h"
+
+class Player : public Character
+{
+protected:
+    int xp;
+    int xpToNextLevel;
+    int gold;
+
+public:
+    Player(string name, int health, int level, int attackPower, int defense);
+    virtual ~Player() = default;
+
+    // Override attack and special ability (polymorphism)
+    virtual void attack(Character& enemy) = 0;
+    virtual void useSpecialAbility(Character& enemy) = 0;
+
+    // Player-specific functions
+    void gainXP(int amount);
+    void levelUp();
+    void addGold(int amount);
+
+    // Getters
+    int getXP() const;
+    int getGold() const;
+    
+    // Setters (for save/load)
+    void setXP(int x);
+    void setGold(int g);
+
+    // Operator overloading
+    bool operator>(const Player& other) const;  // Compare by level
+};
+
+#endif
+
+================================================================================
+FILE: Player.cpp
+================================================================================
+#include "Player.h"
+
+Player::Player(string name, int health, int level, int attackPower, int defense)
+    : Character(name, health, level, attackPower, defense),
+      xp(0), xpToNextLevel(100), gold(0)
+{
+}
+
+void Player::gainXP(int amount)
+{
+    this->xp += amount;
+    cout << this->name << " gained " << amount << " XP!" << endl;
+    
+    if (this->xp >= this->xpToNextLevel)
+    {
+        levelUp();
+    }
+}
+
+void Player::levelUp()
+{
+    this->level++;
+    this->xp = 0;
+    this->xpToNextLevel = 100 * this->level;
+    this->attackPower += 5;
+    this->defense += 2;
+    this->health = this->maxHealth;
+    cout << "\n*** LEVEL UP! " << this->name << " is now level " << this->level << "! ***\n" << endl;
+}
+
+void Player::addGold(int amount)
+{
+    this->gold += amount;
+}
+
+int Player::getXP() const { return this->xp; }
+int Player::getGold() const { return this->gold; }
+
+void Player::setXP(int x) { this->xp = (x < 0) ? 0 : x; }
+void Player::setGold(int g) { this->gold = (g < 0) ? 0 : g; }
+
+bool Player::operator>(const Player& other) const
+{
+    return this->level > other.level;
+}
+
+================================================================================
+FILE: Potion.h
+================================================================================
+#ifndef POTION_H
+#define POTION_H
+
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+class Potion
+{
+private:
+    string potionType;  // Health, Mana
+    int restoreAmount;
+
+public:
+    Potion(string type, int amount);
+    
+    // Getters
+    string getPotionType() const;
+    int getRestoreAmount() const;
+    
+    // Functions
+    void displayPotion() const;
+};
+
+#endif
+
+================================================================================
+FILE: Potion.cpp
+================================================================================
+#include "Potion.h"
+
+Potion::Potion(string type, int amount)
+    : potionType(type), restoreAmount(amount)
+{
+}
+
+string Potion::getPotionType() const { return potionType; }
+int Potion::getRestoreAmount() const { return restoreAmount; }
+
+void Potion::displayPotion() const
+{
+    cout << "Potion: " << potionType << " | Restores: " << restoreAmount << endl;
+}
+
+================================================================================
+FILE: SaveManager.h
+================================================================================
+#ifndef SAVEMANAGER_H
+#define SAVEMANAGER_H
+
+#include "Player.h"
+#include "Warrior.h"
+#include "Mage.h"
+#include "Assassin.h"
+#include <string>
+#include <fstream>
+
+using namespace std;
+
+class SaveManager
+{
+private:
+    string saveFilePath;
+
+public:
+    SaveManager(string path = "savegame.txt");
+    
+    // File handling
+    void saveGame(Player* player);
+    Player* loadGame();
+    bool fileExists() const;
+    void deleteSaveFile();
+    
+    // Utility
+    void displaySaveInfo() const;
+};
+
+#endif
+
+================================================================================
+FILE: SaveManager.cpp
+================================================================================
+#include "SaveManager.h"
+#include <iostream>
+#include <cstdio>
+
+SaveManager::SaveManager(string path)
+    : saveFilePath(path)
+{
+}
+
+void SaveManager::saveGame(Player* player)
+{
+    if (player == nullptr)
+    {
+        throw runtime_error("Cannot save: Player is null!");
+    }
+    
+    ofstream saveFile(saveFilePath);
+    
+    if (!saveFile.is_open())
+    {
+        throw runtime_error("Cannot open save file for writing!");
+    }
+    
+    // Determine player class type
+    int classType = 0;
+    if (dynamic_cast<Warrior*>(player)) classType = 1;
+    else if (dynamic_cast<Mage*>(player)) classType = 2;
+    else if (dynamic_cast<Assassin*>(player)) classType = 3;
+    
+    // Save player data: class, name, level, health, xp, gold, maxHealth
+    saveFile << classType << endl;
+    saveFile << player->getName() << endl;
+    saveFile << player->getLevel() << endl;
+    saveFile << player->getHealth() << endl;
+    saveFile << player->getXP() << endl;
+    saveFile << player->getGold() << endl;
+    
+    saveFile.close();
+    cout << "\n*** Game saved successfully! ***" << endl;
+}
+
+Player* SaveManager::loadGame()
+{
+    ifstream loadFile(saveFilePath);
+    
+    if (!loadFile.is_open())
+    {
+        throw runtime_error("Save file not found!");
+    }
+    
+    try
+    {
+        int classType;
+        string name;
+        int level, health, xp, gold;
+        
+        loadFile >> classType;
+        loadFile.ignore();  // Ignore newline after classType
+        getline(loadFile, name);
+        loadFile >> level >> health >> xp >> gold;
+        
+        loadFile.close();
+        
+        if (classType < 1 || classType > 3)
+        {
+            throw runtime_error("Invalid save file format!");
+        }
+        
+        // Recreate player based on class type
+        Player* player = nullptr;
+        
+        switch (classType)
+        {
+            case 1:
+                player = new Warrior(name);
+                break;
+            case 2:
+                player = new Mage(name);
+                break;
+            case 3:
+                player = new Assassin(name);
+                break;
+        }
+        
+        // Restore player stats
+        if (player != nullptr)
+        {
+            // Set level (this will adjust health/attack/defense based on level)
+            for (int i = 1; i < level; i++)
+            {
+                player->levelUp();
+            }
+            
+            // Restore health and gold directly
+            player->setHealth(health);
+            player->setGold(gold);
+            player->setXP(xp);
+            
+            cout << "\n*** Game loaded successfully! ***" << endl;
+        }
+        
+        return player;
+    }
+    catch (const exception& e)
+    {
+        throw runtime_error("Error loading save file: " + string(e.what()));
+    }
+}
+
+bool SaveManager::fileExists() const
+{
+    ifstream file(saveFilePath);
+    bool exists = file.good();
+    file.close();
+    return exists;
+}
+
+void SaveManager::deleteSaveFile()
+{
+    if (fileExists())
+    {
+        remove(saveFilePath.c_str());
+        cout << "Save file deleted!" << endl;
+    }
+}
+
+void SaveManager::displaySaveInfo() const
+{
+    if (fileExists())
+    {
+        cout << "Save file found at: " << saveFilePath << endl;
+        
+        // Try to display some info
+        ifstream loadFile(saveFilePath);
+        if (loadFile.is_open())
+        {
+            int classType;
+            string name;
+            int level;
+            
+            loadFile >> classType;
+            loadFile.ignore();
+            getline(loadFile, name);
+            loadFile >> level;
+            
+            string classNames[] = {"Unknown", "Warrior", "Mage", "Assassin"};
+            cout << "Character: " << name << " (Level " << level << " " 
+                 << classNames[classType] << ")" << endl;
+            
+            loadFile.close();
+        }
+    }
+    else
+    {
+        cout << "No save file exists." << endl;
+    }
+}
+
+================================================================================
+FILE: Warrior.h
+================================================================================
+#ifndef WARRIOR_H
+#define WARRIOR_H
+
+#include "Player.h"
+
+class Warrior : public Player
+{
+public:
+    Warrior(string name);
+    ~Warrior() = default;
+
+    // Override attack with warrior-specific behavior
+    void attack(Character& enemy) override;
+    void useSpecialAbility(Character& enemy) override;
+};
+
+#endif
+
+================================================================================
+FILE: Warrior.cpp
+================================================================================
+#include "Warrior.h"
+#include <cstdlib>
+#include <ctime>
+
+Warrior::Warrior(string name)
+    : Player(name, 120, 1, 15, 8)
+{
+    cout << "Warrior " << name << " has entered the arena!" << endl;
+}
+
+void Warrior::attack(Character& enemy)
+{
+    int damage = this->attackPower;
+    
+    // Warrior has 30% chance to do double damage
+    if (rand() % 100 < 30)
+    {
+        damage *= 2;
+        cout << this->name << " performs a POWERFUL STRIKE!" << endl;
+    }
+    else
+    {
+        cout << this->name << " attacks with sword!" << endl;
+    }
+    
+    enemy.takeDamage(damage);
+}
+
+void Warrior::useSpecialAbility(Character& enemy)
+{
+    int damage = this->attackPower * 2;
+    cout << this->name << " unleashes WHIRLWIND SLASH!" << endl;
+    cout << "Hits " << enemy.getName() << " with devastating force!" << endl;
+    enemy.takeDamage(damage);
+}
+
+================================================================================
+FILE: Weapon.h
+================================================================================
+#ifndef WEAPON_H
+#define WEAPON_H
+
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+class Weapon
+{
+private:
+    string weaponName;
+    int damage;
+    string rarity;  // Common, Uncommon, Rare, Legendary
+
+public:
+    Weapon(string name, int dmg, string rar);
+    
+    // Getters
+    string getWeaponName() const;
+    int getDamage() const;
+    string getRarity() const;
+    
+    // Functions
+    void displayWeapon() const;
+    void upgradeWeapon();
+    
+    // Operator overloading
+    bool operator==(const Weapon& other) const;  // Compare damage
+    bool operator<(const Weapon& other) const;   // Compare by damage
+};
+
+#endif
+
+================================================================================
+FILE: Weapon.cpp
+================================================================================
+#include "Weapon.h"
+
+Weapon::Weapon(string name, int dmg, string rar)
+    : weaponName(name), damage(dmg), rarity(rar)
+{
+}
+
+string Weapon::getWeaponName() const { return weaponName; }
+int Weapon::getDamage() const { return damage; }
+string Weapon::getRarity() const { return rarity; }
+
+void Weapon::displayWeapon() const
+{
+    cout << "Weapon: " << weaponName << " | Damage: " << damage 
+         << " | Rarity: " << rarity << endl;
+}
+
+void Weapon::upgradeWeapon()
+{
+    damage += 5;
+    cout << weaponName << " has been upgraded! New damage: " << damage << endl;
+}
+
+bool Weapon::operator==(const Weapon& other) const
+{
+    return this->damage == other.damage;
+}
+
+bool Weapon::operator<(const Weapon& other) const
+{
+    return this->damage < other.damage;
+}
+
+================================================================================
+END OF FILE
+================================================================================
