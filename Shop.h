@@ -1,7 +1,6 @@
 #ifndef SHOP_H
 #define SHOP_H
 
-#include <vector>
 #include <iostream>
 #include "Weapon.h"
 #include "Potion.h"
@@ -14,8 +13,11 @@ class Player;
 class Shop
 {
 private:
-    vector<Weapon*> availableWeapons;
-    vector<Potion*> availablePotions;
+    static const int MAX_ITEMS = 20;
+    Weapon* availableWeapons[MAX_ITEMS];
+    Potion* availablePotions[MAX_ITEMS];
+    int weaponCount;
+    int potionCount;
     string shopName;
 
 public:

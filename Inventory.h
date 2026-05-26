@@ -1,7 +1,6 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
 
-#include <vector>
 #include <iostream>
 
 using namespace std;
@@ -13,8 +12,11 @@ class Potion;
 class Inventory
 {
 private:
-    vector<Weapon*> weapons;
-    vector<Potion*> potions;
+    static const int MAX_ITEMS = 20;
+    Weapon* weapons[MAX_ITEMS];
+    Potion* potions[MAX_ITEMS];
+    int weaponCount;
+    int potionCount;
     int maxCapacity;
 
 public:

@@ -1,10 +1,10 @@
 #include "GameManager.h"
-#include "Warrior.h"
-#include "Mage.h"
-#include "Assassin.h"
-#include "Goblin.h"
-#include "Orc.h"
-#include "Dragon.h"
+#include "Warrior.h" //players
+#include "Mage.h" //player
+#include "Assassin.h" //players
+#include "Goblin.h" //enemies
+#include "Orc.h"    //enemies
+#include "Dragon.h" //enemies
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -14,8 +14,8 @@ using namespace std;
 GameManager::GameManager()
     : currentPlayer(nullptr), saveManager("savegame.txt"), shop(nullptr)
 {
-    srand(time(0));
-    shop = new Shop();
+    srand(time(0)); // for random enemy generation
+    shop = new Shop(); // in heap because it has dynamic memory for items and we want it to persist across game sessions
 }
 
 GameManager::~GameManager()
